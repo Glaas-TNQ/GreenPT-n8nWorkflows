@@ -1,0 +1,388 @@
+{
+  "name": "GreenPT_Clickup_Base ticketing",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Ticketing Platform",
+        "formDescription": "How can we help you?",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "What is your email",
+              "placeholder": "youremail@yourdomain.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "How can we help you?",
+              "placeholder": "Write your request here",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Where are you experiencing issues?",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Authentication"
+                  },
+                  {
+                    "option": "Smart Ledger"
+                  },
+                  {
+                    "option": "Flow Canvas"
+                  },
+                  {
+                    "option": "Echo Search"
+                  },
+                  {
+                    "option": "Snapshot Reports"
+                  },
+                  {
+                    "option": "Appendix"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -4816,
+        1056
+      ],
+      "id": "71c40f9d-e462-467e-a729-c6a237083411",
+      "name": "On form submission",
+      "webhookId": "a7712933-31a7-4c87-aeda-fe8495277e4d"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "767589f4-e26f-43cf-922e-5d4b972bb4ab",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3328,
+        1056
+      ],
+      "id": "5e55847d-1bc8-4ed7-a252-bd3cd664eef1",
+      "name": "Extract_Agent_Output"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Extract from Form').item.json.User_Query }}",
+        "options": {
+          "systemMessage": "=You are a skilled customer support operator, tasked with triaging the the user's query and suggest a possible solution to the operator that is going to take care of the ticket.\nThe request is relative to this section of the Aurora platform:{{ $('Extract from Form').item.json.User_Category }} \n----\nThis is the relevant knowledge base you should use to propose a solution to the operator:\n{{ $json.knowledge_base }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -3760,
+        1056
+      ],
+      "id": "79a62b62-5fa2-4368-997e-fe8fee8c282b",
+      "name": "Triage_Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "green-l-raw",
+          "mode": "list",
+          "cachedResultName": "green-l-raw"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -3760,
+        1424
+      ],
+      "id": "53e1dee9-04c2-4621-a7da-fe356cb9d2af",
+      "name": "GreenPT_Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Khi4UyZcbl6wUNK4",
+          "name": "GreenPTRocks"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "team": "90151166998",
+        "space": "90157755894",
+        "folderless": true,
+        "list": "901516983455",
+        "name": "=T1_{{ $('Extract from Form').item.json.User_Category }}_{{ $('Extract from Form').item.json.User_Email }}",
+        "additionalFields": {
+          "content": "=User  {{ $('Extract from Form').item.json.User_Email }}\nHas opened a ticket:\" {{ $('Extract from Form').item.json.User_Query }} \"\n\nTriage:\n{{ $json.output }}"
+        }
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        -3040,
+        1056
+      ],
+      "id": "34c05f07-6db9-4907-b1b7-60e7a69c7356",
+      "name": "Create a task",
+      "credentials": {
+        "clickUpOAuth2Api": {
+          "id": "TWjnzBOGe153SjsW",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Form trigger\n\nYour n8n workflow starts from here!\nConfigure this node to get relevant information from the user\n\n### Don't forget to flag key fields as mandatory!",
+        "height": 496,
+        "width": 432,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -5008,
+        832
+      ],
+      "id": "372e61f6-f84c-41d9-b4d5-febaa23a1658",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e051541-f87a-4ff8-abb4-6c2e3132bc38",
+              "name": "User_Email",
+              "value": "={{ $json[\"What is your email\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "735dcb11-a5d5-4817-be19-1b35109baf24",
+              "name": "User_Query",
+              "value": "={{ $json[\"How can we help you?\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "6ca8a4e0-0a0a-43bd-bb3a-e8f4e5383144",
+              "name": "User_Category",
+              "value": "={{ $json[\"Where are you experiencing issues?\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "66de4062-5b52-4ce3-a4d3-aedd218c7008",
+              "name": "submittedAt",
+              "value": "={{ $json.submittedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "1d0852dc-4d77-45d7-8673-e2974f48e641",
+              "name": "formMode",
+              "value": "={{ $json.formMode }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4528,
+        1056
+      ],
+      "id": "80af1da1-20e3-4271-b85a-98a44495a69c",
+      "name": "Extract from Form",
+      "notes": "Extract and sanitize data coming from the form"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "MAOxaZspNAsFvEd7",
+          "mode": "list",
+          "cachedResultName": "Aurora_KnowledgeBase",
+          "cachedResultUrl": "/projects/6EYYwT69vLomGFXs/datatables/MAOxaZspNAsFvEd7"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "topic",
+              "keyValue": "={{ $json.User_Category }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -4256,
+        1056
+      ],
+      "id": "9e552a14-949e-409e-9e68-cf1cd653baab",
+      "name": "Get guidelines"
+    },
+    {
+      "parameters": {
+        "content": "# Get Guidelines\n\nUse n8n built in data tables to store and fetch information from your knowledge base.\n\nTo get the relevant information and avoid wasting token on extremely long system prompts you can have the user select the area of the platform in which they are experiencing issue, as we are doing here.\n\nThis way you won't have to deal with RAG (for the time being)\n",
+        "height": 592,
+        "width": 320,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -4336,
+        736
+      ],
+      "id": "af742ef1-890d-4681-b650-0b841acd32db",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Triage !\n\nCheck the user's query against your retrieved knowledge base to help customer support operators solve the issue, by suggesting relevant informations\n",
+        "height": 400,
+        "width": 272
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3776,
+        800
+      ],
+      "id": "a914314a-b1fd-4c6f-b53b-cf6f4f6ef8f3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# Create Ticket on ClickUp\n\nEasy as that, create a simple ticket using the information you retrieved from the previous nodes",
+        "height": 416,
+        "width": 272,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3120,
+        800
+      ],
+      "id": "a21e92e6-7a6a-4445-b6aa-190280c96e3d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# This is where the magic is!\n\nYou can select an OpenAI node, and configure it to use GreenPT base url in order to power your agents with open source models hosted on a service that respect your privacy AND the planet",
+        "height": 368,
+        "width": 496,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3920,
+        1248
+      ],
+      "id": "9c56f20d-43dc-42b5-b4f0-14d13494b2ca",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract from Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Triage_Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract_Agent_Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GreenPT_Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Triage_Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract_Agent_Output": {
+      "main": [
+        [
+          {
+            "node": "Create a task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from Form": {
+      "main": [
+        [
+          {
+            "node": "Get guidelines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get guidelines": {
+      "main": [
+        [
+          {
+            "node": "Triage_Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a0bde915-6c2f-4405-b455-027afadfc6b9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b0e39b06892c2d97dfe49c8cc85c9624a34cf328962639e8ba7d8ac5a128dcd1"
+  },
+  "id": "OmA6F12n2ZzhaE0c",
+  "tags": []
+}
